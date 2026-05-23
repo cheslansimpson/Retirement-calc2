@@ -1,0 +1,13 @@
+{
+  "name": "Monte Carlo Retirement Simulator",
+  "short_name": "RetirementSim",
+  "description": "Advanced Monte Carlo Retirement Simulator (offline capable)",
+  "start_url": "./RetirementSimulator_v2.html",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#388bfd",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
