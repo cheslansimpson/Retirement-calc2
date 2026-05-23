@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retirement Simulator v2 Regression Tests</title>
+<style>
+:root {
+  --bg: #0b1220;
+  --panel: #111827;
+  --panel-2: #182235;
+  --border: #2d3b55;
+  --fg: #e5edf8;
+  --muted: #9fb0cc;
+  --pass: #36c58b;
+  --fail: #ff6b6b;
+  --warn: #f0b35a;
+  --accent: #61a7ff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(180deg, #09101d 0%, #0f1728 100%);
+  color: var(--fg);
+}
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
+p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.hero,
+.panel {
+  background: rgba(17, 24, 39, 0.94);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+}
+.hero {
+  padding: 26px;
+  margin-bottom: 18px;
+}
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+button,
+.link-btn {
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--fg);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+button.primary {
+  background: linear-gradient(135deg, #2f74ff 0%, #4f9eff 100%);
+  border-color: #4f9eff;
+  color: white;
+  font-weight: 700;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.stat {
+  padding: 18px;
+}
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+.stat-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.panel {
+  padding: 20px;
+  margin-bottom: 18px;
+}
+.section-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+.status {
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  background: rgba(24, 34, 53, 0.92);
+}
+.status.pass { border-color: rgba(54, 197, 139, 0.45); }
+.status.fail { border-color: rgba(255, 107, 107, 0.45); }
+.status.warn { border-color: rgba(240, 179, 90, 0.45); }
+.test-list {
+  display: grid;
+  gap: 10px;
+}
+.test-item {
+  border: 1px solid var(--border);
+  background: rgba(24, 34, 53, 0.78);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.test-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+.test-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.test-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.badge {
+  display: inline-block;
+  min-width: 76px;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.badge.pass {
+  color: #071a12;
+  background: var(--pass);
+}
+.badge.fail {
+  color: #2b0c0c;
+  background: var(--fail);
+}
+.details,
+.note-box,
+code {
+  color: var(--muted);
+}
+.details {
+  margin-top: 8px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.note-box {
+  font-size: 13px;
+  background: rgba(97, 167, 255, 0.08);
+  border: 1px solid rgba(97, 167, 255, 0.2);
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+iframe {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: white;
+}
+@media (max-width: 860px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; }
+  .test-head { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>Retirement Simulator v2 Regression Tests</h1>
+    <p>
+      This page runs a saved browser-based regression suite against <strong>RetirementSimulator_v2.html</strong>.
+      It covers calculation helpers, validation, UI wiring, simulation flow, export behavior, and advanced model branches.
+    </p>
+    <div class="hero-actions">
+      <button id="runBtn" class="primary">Run Saved Test Suite</button>
+      <a class="link-btn" href="./RetirementSimulator_v2.html">Open Simulator</a>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="panel stat">
+      <div class="stat-label">Total Tests</div>
+      <div class="stat-value" id="totalCount">0</div>
+      <div class="stat-sub">Saved regression checks</div>
+    </div>
+    <div class="panel stat">
+      <div class="stat-label">Passed</div>
+      <div class="stat-value" id="passCount">0</div>
+      <div class="stat-sub">Checks currently green</div>
+    </div>
+    <div class="panel stat">
+      <div class="stat-label">Failed</div>
+      <div class="stat-value" id="failCount">0</div>
+      <div class="stat-sub">Checks needing attention</div>
+    </div>
+    <div class="panel stat">
+      <div class="stat-label">Last Run</div>
+      <div class="stat-value" id="durationMs">-</div>
+      <div class="stat-sub">Elapsed milliseconds</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="section-title">Run Status</h2>
+    <div id="statusBox" class="status warn">Ready. Click "Run Saved Test Suite" to execute the regression harness.</div>
+    <div class="note-box">
+      If your browser blocks file-to-file iframe access when opening this page directly from disk, run the folder from a simple static server
+      such as <code>python -m http.server 8000</code> and open both files through <code>http://localhost:8000/</code>.
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="section-title">Results</h2>
+    <div id="testList" class="test-list"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="section-title">Live App Frame</h2>
+    <p>The most recent simulator instance used by the test harness appears below.</p>
+    <iframe id="appFrame" title="Retirement Simulator test frame"></iframe>
+  </section>
+</main>
+
+<script>
+const APP_FILE = "./RetirementSimulator_v2.html";
+const runButton = document.getElementById("runBtn");
+const statusBox = document.getElementById("statusBox");
+const testList = document.getElementById("testList");
+const appFrame = document.getElementById("appFrame");
+
+function setStatus(message, tone) {
+  statusBox.className = "status " + tone;
+  statusBox.textContent = message;
+}
+
+function updateSummary(results, duration) {
+  const passed = results.filter((result) => result.status === "passed").length;
+  const failed = results.length - passed;
+  document.getElementById("totalCount").textContent = String(results.length);
+  document.getElementById("passCount").textContent = String(passed);
+  document.getElementById("failCount").textContent = String(failed);
+  document.getElementById("durationMs").textContent = duration == null ? "-" : String(duration);
+}
+
+function renderResults(results) {
+  testList.innerHTML = "";
+  results.forEach((result) => {
+    const item = document.createElement("article");
+    item.className = "test-item";
+    const details = result.message ? `<div class="details">${escapeHtml(result.message)}</div>` : "";
+    item.innerHTML = `
+      <div class="test-head">
+        <div>
+          <div class="test-name">${escapeHtml(result.name)}</div>
+          <div class="test-meta">${escapeHtml(result.group)}</div>
+        </div>
+        <span class="badge ${result.status}">${result.status}</span>
+      </div>
+      ${details}
+    `;
+    testList.appendChild(item);
+  });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function approx(actual, expected, epsilon) {
+  return Math.abs(actual - expected) <= epsilon;
+}
+
+function excessKurtosis(values) {
+  const n = values.length;
+  const mean = values.reduce((sum, value) => sum + value, 0) / n;
+  let m2 = 0;
+  let m4 = 0;
+  values.forEach((value) => {
+    const delta = value - mean;
+    const delta2 = delta * delta;
+    m2 += delta2;
+    m4 += delta2 * delta2;
+  });
+  m2 /= n;
+  m4 /= n;
+  return m2 === 0 ? 0 : m4 / (m2 * m2) - 3;
+}
+
+function createCanvasStub(win) {
+  const original = win.HTMLCanvasElement.prototype.getContext;
+  win.HTMLCanvasElement.prototype.getContext = function() {
+    return {
+      fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 1,
+      font: "",
+      textAlign: "left",
+      setLineDash() {},
+      fillRect() {},
+      beginPath() {},
+      moveTo() {},
+      lineTo() {},
+      stroke() {},
+      fillText() {},
+      closePath() {},
+      fill() {}
+    };
+  };
+  return function restore() {
+    win.HTMLCanvasElement.prototype.getContext = original;
+  };
+}
+
+function createImmediateTimingStub(win) {
+  const originalTimeout = win.setTimeout;
+  const originalRaf = win.requestAnimationFrame;
+  win.setTimeout = function(callback) {
+    callback();
+    return 1;
+  };
+  win.requestAnimationFrame = function(callback) {
+    callback();
+    return 1;
+  };
+  return function restore() {
+    win.setTimeout = originalTimeout;
+    win.requestAnimationFrame = originalRaf;
+  };
+}
+
+function withPatchedMathRandom(win, implementation, callback) {
+  const original = win.Math.random;
+  win.Math.random = implementation;
+  try {
+    return callback();
+  } finally {
+    win.Math.random = original;
+  }
+}
+
+function withPatchedFunction(owner, name, implementation, callback) {
+  const original = owner[name];
+  owner[name] = implementation;
+  try {
+    return callback();
+  } finally {
+    owner[name] = original;
+  }
+}
+
+function baseParams(win, overrides) {
+  return Object.assign({
+    curAge: 30,
+    retAge: 31,
+    startBal: 1000,
+    contrib: 100,
+    goal: 1000,
+    retRet: 10,
+    retStd: 0,
+    infl: 0,
+    nsims: 100,
+    brokOn: false,
+    brokBal: 0,
+    brokC: 0,
+    brokR: 0,
+    brokS: 0,
+    hsaOn: false,
+    hsaBal: 0,
+    hsaBw: 0,
+    hsaMn: 0,
+    hsaMx: 0,
+    lads: win.lads.slice(),
+    pens: [
+      { on: false, name: "Pension 1", mo: 0, sa: 60, co: 0, le: 90, idx: 1 },
+      { on: false, name: "Pension 2", mo: 0, sa: 60, co: 0, le: 90, idx: 2 }
+    ],
+    dist: "normal",
+    tDf: 5,
+    samp: "pseudo",
+    arOn: false,
+    arPhi: 0,
+    regOn: false,
+    bullM: 12,
+    bullS: 10,
+    bullSt: 0.85,
+    bearM: -8,
+    bearS: 25,
+    bearSt: 0.7,
+    initB: 0.75
+  }, overrides || {});
+}
+
+function loadApp() {
+  return new Promise((resolve, reject) => {
+    const cacheKey = "?test=" + Date.now() + "-" + Math.random().toString(16).slice(2);
+    appFrame.onload = function() {
+      try {
+        const win = appFrame.contentWindow;
+        const doc = appFrame.contentDocument;
+        if (!win || !doc) {
+          reject(new Error("Simulator frame loaded without a readable window/document."));
+          return;
+        }
+        resolve({ win, doc });
+      } catch (error) {
+        reject(new Error("Unable to access the simulator frame. Your browser may be blocking local file iframe access. " + error.message));
+      }
+    };
+    appFrame.onerror = function() {
+      reject(new Error("Failed to load the simulator into the test frame."));
+    };
+    appFrame.src = APP_FILE + cacheKey;
+  });
+}
+
+async function runTest(definition) {
+  const { win, doc } = await loadApp();
+  try {
+    await definition.run({ win, doc });
+    return { name: definition.name, group: definition.group, status: "passed", message: "" };
+  } catch (error) {
+    return { name: definition.name, group: definition.group, status: "failed", message: error && error.message ? error.message : String(error) };
+  }
+}
+
+const tests = [
+
+  // --- Task 6: Tax Engine ---
+  {
+    group: "Tax Engine",
+    name: "estimateTaxes computes federal tax for single filer",
+    run: async ({ win }) => {
+      const income = 60000;
+      const tax = win.estimateTaxes({ income, filingStatus: "single", year: 2024 });
+      assert(typeof tax === "number" && tax > 0 && tax < income, "Tax should be a positive number less than income.");
+      // 2024 brackets: 10% up to $11,600, 12% to $47,150, 22% to $100,525
+      assert(Math.abs(tax - 7638) < 100, `Expected tax near $7,638, got ${tax}`);
+    }
+  },
+  {
+    group: "Tax Engine",
+    name: "estimateTaxes supports married filing jointly",
+    run: async ({ win }) => {
+      const income = 120000;
+      const tax = win.estimateTaxes({ income, filingStatus: "married", year: 2024 });
+      assert(typeof tax === "number" && tax > 0 && tax < income, "Tax should be a positive number less than income.");
+      // 2024 brackets: 10% up to $23,200, 12% to $94,300, 22% to $201,050
+      assert(Math.abs(tax - 15276) < 200, `Expected tax near $15,276, got ${tax}`);
+    }
+  },
+
+  // --- Task 5: Scenario Comparison ---
+  {
+    group: "Comparison",
+    name: "compareScenarios returns summary stats for two scenarios",
+    run: async ({ win }) => {
+      const s1 = win.createDefaultScenario();
+      s1.name = "Base";
+      s1.accounts.retirement.balance = 100000;
+      s1.retirement.essentialSpending = 20000;
+      const s2 = win.createDefaultScenario();
+      s2.name = "Aggressive";
+      s2.accounts.retirement.balance = 100000;
+      s2.retirement.essentialSpending = 15000;
+      const result = win.compareScenarios(s1, s2);
+      assert(result && result.length === 2, "Comparison did not return two results.");
+      assert(result[0].name === "Base" && result[1].name === "Aggressive", "Scenario names not preserved.");
+      assert(typeof result[0].medianEndingBalance === "number", "Missing summary stat.");
+    }
+  },
+  {
+    group: "Comparison",
+    name: "compareScenarios highlights the better outcome",
+    run: async ({ win }) => {
+      const s1 = win.createDefaultScenario();
+      s1.name = "A";
+      s1.accounts.retirement.balance = 100000;
+      s1.retirement.essentialSpending = 25000;
+      const s2 = win.createDefaultScenario();
+      s2.name = "B";
+      s2.accounts.retirement.balance = 100000;
+      s2.retirement.essentialSpending = 15000;
+      const result = win.compareScenarios(s1, s2);
+      assert(result[1].medianEndingBalance > result[0].medianEndingBalance, "Better outcome not highlighted.");
+    }
+  },
+
+  // --- Task 4: Scenario Save/Load ---
+  {
+    group: "Persistence",
+    name: "saveScenario serializes the current scenario as JSON",
+    run: async ({ win }) => {
+      const scenario = win.createDefaultScenario();
+      scenario.name = "Test Save";
+      win.activeScenario = scenario;
+      const json = win.saveScenario();
+      assert(typeof json === "string" && json.includes('"name":"Test Save"'), "Scenario was not serialized as JSON string.");
+    }
+  },
+  {
+    group: "Persistence",
+    name: "loadScenario restores a scenario from JSON",
+    run: async ({ win }) => {
+      const scenario = win.createDefaultScenario();
+      scenario.name = "Test Load";
+      const json = JSON.stringify(scenario);
+      win.loadScenario(json);
+      assert(win.activeScenario && win.activeScenario.name === "Test Load", "Scenario was not restored from JSON.");
+    }
+  },
+  {
+    group: "Persistence",
+    name: "listSavedScenarios returns all saved scenario names",
+    run: async ({ win }) => {
+      win.savedScenarios = [];
+      for (let i = 1; i <= 2; ++i) {
+        const s = win.createDefaultScenario();
+        s.name = `Scenario ${i}`;
+        win.savedScenarios.push(s);
+      }
+      const names = win.listSavedScenarios();
+      assert(Array.isArray(names) && names.length === 2 && names[0] === "Scenario 1" && names[1] === "Scenario 2", "Saved scenario names not listed correctly.");
+    }
+  },
+    {
+      group: "Social Security",
+      name: "estimateSocialSecurityAnnual converts FRA benefit and claim age into annual income",
+      run: async ({ win }) => {
+        // FRA 67, claim 67, $2000/mo, 0 COLA
+        const cfg = { primaryFraMonthly: 2000, primaryClaimAge: 67, fraAge: 67, colaPct: 0 };
+        const amt = win.estimateSocialSecurityAnnual(cfg, 67);
+        assert(Math.abs(amt - 24000) < 1, "FRA claim should be $24,000/yr");
+        // Early claim 62
+        const cfg2 = { primaryFraMonthly: 2000, primaryClaimAge: 62, fraAge: 67, colaPct: 0 };
+        const amt2 = win.estimateSocialSecurityAnnual(cfg2, 62);
+        assert(amt2 < 24000 && amt2 > 15000, "Early claim should reduce benefit");
+        // Delayed claim 70
+        const cfg3 = { primaryFraMonthly: 2000, primaryClaimAge: 70, fraAge: 67, colaPct: 0 };
+        const amt3 = win.estimateSocialSecurityAnnual(cfg3, 70);
+        assert(amt3 > 24000, "Delayed claim should increase benefit");
+        // COLA after claim
+        const cfg4 = { primaryFraMonthly: 2000, primaryClaimAge: 67, fraAge: 67, colaPct: 2 };
+        const amt4 = win.estimateSocialSecurityAnnual(cfg4, 69);
+        assert(amt4 > 24000, "COLA should increase benefit after claim");
+      }
+    },
+    {
+      group: "Social Security",
+      name: "simulateRetirementPlan integrates Social Security income after claim age",
+      run: async ({ win }) => {
+        const scenario = win.createDefaultScenario();
+        scenario.demographics.currentAge = 60;
+        scenario.demographics.retirementAge = 65;
+        scenario.demographics.planEndAge = 70;
+        scenario.accounts.retirement.balance = 100000;
+        scenario.retirement.essentialSpending = 20000;
+        scenario.retirement.discretionarySpending = 0;
+        scenario.socialSecurity = {
+          enabled: true,
+          primaryFraMonthly: 2000,
+          primaryClaimAge: 67,
+          fraAge: 67,
+          colaPct: 0
+        };
+        const result = win.simulateRetirementPlan(scenario);
+        const ssIncomes = result.retirementYears.map(y => y.ssIncome);
+        assert(ssIncomes[0] === 0, "No SS before claim age");
+        assert(ssIncomes[2] > 0, "SS should start at claim age");
+      }
+    },
+  {
+    group: "Scenario schema",
+    name: "SCENARIO_VERSION is a positive integer",
+    run: async ({ win }) => {
+      assert(typeof win.SCENARIO_VERSION === "number" && win.SCENARIO_VERSION >= 1, "SCENARIO_VERSION should be a positive integer.");
+    }
+  },
+  {
+    group: "Scenario schema",
+    name: "createDefaultScenario returns a versioned canonical scenario",
+    run: async ({ win }) => {
+      const scenario = win.createDefaultScenario();
+      assert(scenario && typeof scenario === "object", "createDefaultScenario did not return an object.");
+      assert(scenario.version === win.SCENARIO_VERSION, "Scenario version is missing.");
+      assert(typeof scenario.name === "string" && scenario.name.length > 0, "Scenario name is missing.");
+      assert(scenario.demographics && scenario.accounts && scenario.retirement && scenario.socialSecurity && scenario.taxes, "Canonical scenario sections are missing.");
+      assert(scenario.params && typeof scenario.params === "object", "Backward-compatible params payload is missing.");
+    }
+  },
+  {
+    group: "Scenario schema",
+    name: "migrateScenario upgrades an older scenario to the current schema",
+    run: async ({ win }) => {
+      const migrated = win.migrateScenario({ version: 1, name: "Old", curAge: 30, retAge: 65 });
+      assert(migrated.version === win.SCENARIO_VERSION, "Scenario did not migrate to the current version.");
+      assert(migrated.demographics.currentAge === 30, "Current age did not migrate.");
+      assert(migrated.demographics.retirementAge === 65, "Retirement age did not migrate.");
+      const fallback = win.migrateScenario(null);
+      assert(fallback && fallback.version === win.SCENARIO_VERSION, "Null migration fallback did not return the latest schema.");
+    }
+  },
+  {
+    group: "Retirement engine",
+    name: "simulateRetirementPlan produces annual retirement cash flow results",
+    run: async ({ win }) => {
+      const scenario = win.createDefaultScenario();
+      scenario.demographics.currentAge = 64;
+      scenario.demographics.retirementAge = 65;
+      scenario.demographics.planEndAge = 67;
+      scenario.accounts.retirement.balance = 1000000;
+      const result = win.simulateRetirementPlan(scenario);
+      assert(Array.isArray(result.retirementYears) && result.retirementYears.length === 2, "Retirement year outputs are missing.");
+      assert(typeof result.successProbability === "number", "Success probability is missing.");
+    }
+  },
+  {
+    group: "Retirement engine",
+    name: "guardrails reduce discretionary spending after a bad retirement outcome",
+    run: async ({ win }) => {
+      const year = win.applySpendingGuardrails({ portfolioRatio: 0.7, essential: 50000, discretionary: 20000, badMarketCutPct: 20, goodMarketRaisePct: 10, spendingFloor: 45000, spendingCeiling: 90000 });
+      assert(year.discretionary < 20000, "Discretionary spending was not reduced.");
+      assert(year.total >= 45000, "Spending fell below the floor.");
+    }
+  },
+  {
+    group: "Math helpers",
+    name: "invNorm is centered at the median",
+    run: async ({ win }) => {
+      assert(approx(win.invNorm(0.5), 0, 1e-12), "Expected invNorm(0.5) to be approximately zero.");
+    }
+  },
+  {
+    group: "Math helpers",
+    name: "tbFV compounds every ladder rung to retirement",
+    run: async ({ win }) => {
+      const years = 2;
+      const expected = win.lads.reduce((sum, rung) => sum + rung.p * Math.pow(1 + rung.r / 100, years), 0);
+      assert(approx(win.tbFV(years), expected, 1e-6), "T-Bill future value did not match the rung-by-rung compound calculation.");
+    }
+  },
+  {
+    group: "Math helpers",
+    name: "calcPen returns annual, lifetime, and positive PV values",
+    run: async ({ win }) => {
+      const result = win.calcPen(2000, 60, 2, 63, 65, 2.5);
+      assert(result.annual === 24000, "Annual pension amount should be 24000.");
+      assert(result.lifetime > 48000, "Lifetime payout should exceed two years of payments.");
+      assert(result.pv > 0, "Present value should be positive.");
+    }
+  },
+  {
+    group: "Math helpers",
+    name: "HSA and market zero-return formulas degrade to straight contributions",
+    run: async ({ win }) => {
+      assert(win.hsaFV(1000, 100, 0, 2) === 6200, "HSA zero-return branch failed.");
+      assert(win.mktFV(1000, 100, 0, 2) === 3400, "Market zero-return branch failed.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "Tab switching activates only the requested tab panel",
+    run: async ({ win, doc }) => {
+      win.sw("advanced");
+      assert(doc.getElementById("tab-advanced").classList.contains("active"), "Advanced tab panel did not activate.");
+      assert(!doc.getElementById("tab-retirement").classList.contains("active"), "Retirement tab panel stayed active.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "Brokerage toggle shows and hides its dependent section",
+    run: async ({ win, doc }) => {
+      doc.getElementById("togBrok").classList.remove("on");
+      doc.getElementById("brokF").style.display = "none";
+      win.tog("togBrok", "brokF");
+      assert(doc.getElementById("togBrok").classList.contains("on"), "Brokerage toggle did not switch on.");
+      assert(doc.getElementById("brokF").style.display === "block", "Brokerage fields did not open.");
+      win.tog("togBrok", "brokF");
+      assert(doc.getElementById("brokF").style.display === "none", "Brokerage fields did not collapse.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "Advanced selections update the active model summary badges",
+    run: async ({ win, doc }) => {
+      win.selRB("distRG", 1);
+      win.selRB("sampRG", 1);
+      doc.getElementById("togAR").classList.add("on");
+      doc.getElementById("arPhi").value = "-20";
+      doc.getElementById("togReg").classList.add("on");
+      win.updAdv();
+      const text = doc.getElementById("modelSum").textContent;
+      assert(text.includes("t-dist"), "Missing t-distribution badge.");
+      assert(text.includes("Halton QMC"), "Missing Halton badge.");
+      assert(text.includes("AR(1)"), "Missing AR badge.");
+      assert(text.includes("Regime Switching"), "Missing regime-switching badge.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "collect returns enabled account and advanced setting values",
+    run: async ({ win, doc }) => {
+      doc.getElementById("togBrok").classList.add("on");
+      doc.getElementById("togAR").classList.add("on");
+      doc.getElementById("togReg").classList.add("on");
+      doc.getElementById("brokBal").value = "12345";
+      doc.getElementById("arPhi").value = "15";
+      doc.getElementById("bullM").value = "11.5";
+      win.selRB("distRG", 1);
+      win.selRB("sampRG", 1);
+      const params = win.collect();
+      assert(params.brokOn === true, "Brokerage flag was not collected.");
+      assert(params.brokBal === 12345, "Brokerage balance was not collected.");
+      assert(params.arOn === true && params.arPhi === 0.15, "AR settings were not collected.");
+      assert(params.regOn === true && params.bullM === 11.5, "Regime settings were not collected.");
+      assert(params.dist === "t" && params.samp === "quasi", "Advanced radio selections were not collected.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "validate surfaces retirement and HSA input failures",
+    run: async ({ win }) => {
+      const params = baseParams(win, { goal: 0, hsaOn: true, hsaMn: 8, hsaMx: 8 });
+      params.retAge = params.curAge;
+      const messages = win.validate(params).map((error) => error.msg).join(" | ");
+      assert(messages.includes("Retirement age must be greater than current age."), "Missing retirement-age validation error.");
+      assert(messages.includes("Retirement goal must be > $0."), "Missing goal validation error.");
+      assert(messages.includes("Max return must exceed min."), "Missing HSA max/min validation error.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "showErrs marks the tab, field, and banner state",
+    run: async ({ win, doc }) => {
+      win.showErrs([{ tab: "retirement", fid: "f-goal", msg: "Goal invalid." }]);
+      assert(doc.querySelector('[data-tab="retirement"]').classList.contains("has-error"), "Retirement tab was not flagged.");
+      assert(doc.querySelector("#f-goal input").classList.contains("err"), "Goal input was not marked invalid.");
+      assert(doc.getElementById("banner").style.display === "block", "Validation banner was not shown.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "HSA preview renders milestone projections and annual contribution tip",
+    run: async ({ win, doc }) => {
+      doc.getElementById("curAge").value = "30";
+      doc.getElementById("retAge").value = "65";
+      doc.getElementById("hsaBal").value = "5000";
+      doc.getElementById("hsaBw").value = "200";
+      doc.getElementById("hsaMin").value = "6";
+      doc.getElementById("hsaMax").value = "10";
+      win.updHSA();
+      const preview = doc.getElementById("hsaPrev").textContent;
+      const tip = doc.getElementById("hsaBwTip").textContent;
+      assert(preview.includes("At Retirement"), "HSA preview did not render the retirement row.");
+      assert(preview.includes("Pessimistic") && preview.includes("Optimistic"), "HSA preview headers are incomplete.");
+      assert(tip.includes("26 x $200 = $5,200/yr"), "HSA contribution tip text is wrong.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "Pension preview shows annual, lifetime, and PV cards when enabled",
+    run: async ({ win, doc }) => {
+      doc.getElementById("togP1").classList.add("on");
+      doc.getElementById("p1Mon").value = "2000";
+      doc.getElementById("p1SA").value = "60";
+      doc.getElementById("p1Cola").value = "2";
+      doc.getElementById("p1LE").value = "90";
+      win.updPen(1);
+      const text = doc.getElementById("p1Stats").textContent;
+      assert(text.includes("Annual Income"), "Annual pension card missing.");
+      assert(text.includes("Lifetime"), "Lifetime pension card missing.");
+      assert(text.includes("PV at Retirement"), "Pension PV card missing.");
+    }
+  },
+  {
+    group: "UI and validation",
+    name: "T-Bill ladder add and remove logic respects the configured bounds",
+    run: async ({ win, doc }) => {
+      while (win.lads.length > 4) {
+        win.remLad(win.lads[win.lads.length - 1].id);
+      }
+      const start = win.lads.length;
+      win.addLad();
+      const addedId = win.lads[win.lads.length - 1].id;
+      assert(win.lads.length === start + 1, "A new ladder rung was not added.");
+      while (win.lads.length < 8) {
+        win.addLad();
+      }
+      win.addLad();
+      assert(win.lads.length === 8, "Ladder length exceeded the maximum of 8.");
+      win.remLad(addedId);
+      assert(!win.lads.some((rung) => rung.id === addedId), "The selected ladder rung was not removed.");
+      assert(doc.getElementById("tbTot").textContent.startsWith("$"), "T-Bill total did not refresh.");
+    }
+  },
+  {
+    group: "Simulation flow",
+    name: "simulate returns a deterministic baseline when volatility is zero",
+    run: async ({ win }) => {
+      const originalLads = win.lads.slice();
+      try {
+        win.lads = [];
+        const params = baseParams(win, { contrib: 100, retRet: 10, retStd: 0, nsims: 5 });
+        const result = win.simulate(params);
+        const expected = 1000 * 1.1 + 100 * 12;
+        assert(result.suc === 100, "Deterministic baseline should succeed in every simulation.");
+        assert(approx(result.med, expected, 1e-9), "Median total did not match the deterministic path.");
+        assert(approx(result.chart.p50[1], expected, 1e-9), "Median chart value did not match the deterministic path.");
+      } finally {
+        win.lads = originalLads;
+      }
+    }
+  },
+  {
+    group: "Simulation flow",
+    name: "showRes renders summary, distribution, and interpretation sections",
+    run: async ({ win, doc }) => {
+      const restoreCanvas = createCanvasStub(win);
+      const restoreTiming = createImmediateTimingStub(win);
+      try {
+        win.showRes({
+          suc: 82.5,
+          med: 2500000,
+          rMed: 1800000,
+          tb: 50000,
+          hMed: 60000,
+          hP10: 40000,
+          hP90: 90000,
+          tpv: 0,
+          yrs: 35,
+          pens: [{ annual: 0, lifetime: 0, pv: 0 }, { annual: 0, lifetime: 0, pv: 0 }],
+          comb: [1000000, 1500000, 2000000, 2500000, 3000000],
+          chart: {
+            ages: [30, 65],
+            p10: [100000, 900000],
+            p25: [200000, 1200000],
+            p50: [300000, 1500000],
+            p75: [400000, 1800000],
+            p90: [500000, 2100000]
+          }
+        }, win.collect());
+      } finally {
+        restoreTiming();
+        restoreCanvas();
+      }
+      const text = doc.getElementById("resContent").textContent;
+      assert(text.includes("Success Rate"), "Results summary did not render.");
+      assert(text.includes("Outcome Distribution"), "Outcome distribution section missing.");
+      assert(text.includes("CFP Interpretation"), "Interpretation section missing.");
+    }
+  },
+  {
+    group: "Simulation flow",
+    name: "showTL renders retirement, Medicare, and pension milestones",
+    run: async ({ win, doc }) => {
+      const params = win.collect();
+      params.curAge = 30;
+      params.retAge = 65;
+      params.hsaOn = true;
+      params.hsaBal = 5000;
+      params.hsaBw = 200;
+      params.hsaMn = 6;
+      params.hsaMx = 10;
+      params.pens = [
+        { on: true, name: "Pension A", mo: 2000, sa: 68, co: 2, le: 90, idx: 1 },
+        { on: false, name: "Pension B", mo: 0, sa: 60, co: 0, le: 90, idx: 2 }
+      ];
+      win.showTL({ yrs: 35, tb: 60000 }, params);
+      const text = doc.getElementById("tlContent").textContent;
+      assert(text.includes("Full Retirement") && text.includes("Age 65"), "Retirement milestone missing from timeline.");
+      assert(text.includes("Medicare + HSA Universal Access"), "Medicare milestone missing from timeline.");
+      assert(text.includes("Pension A Begins"), "Pension milestone missing from timeline.");
+    }
+  },
+  {
+    group: "Simulation flow",
+    name: "doRun blocks invalid input and surfaces the validation banner",
+    run: async ({ win, doc }) => {
+      doc.getElementById("curAge").value = "65";
+      doc.getElementById("retAge").value = "65";
+      doc.getElementById("goal").value = "0";
+      win.doRun();
+      const text = doc.getElementById("bannerList").textContent;
+      assert(text.includes("Retirement age must be greater than current age."), "Missing retirement-age validation banner item.");
+      assert(text.includes("Retirement goal must be > $0."), "Missing goal validation banner item.");
+    }
+  },
+  {
+    group: "Simulation flow",
+    name: "doRun with valid inputs renders results, timeline, and restores the button",
+    run: async ({ win, doc }) => {
+      const restoreCanvas = createCanvasStub(win);
+      const restoreTiming = createImmediateTimingStub(win);
+      const originalLads = win.lads.slice();
+      try {
+        win.lads = [];
+        doc.getElementById("curAge").value = "30";
+        doc.getElementById("retAge").value = "31";
+        doc.getElementById("startBal").value = "1000";
+        doc.getElementById("contrib").value = "100";
+        doc.getElementById("goal").value = "1000";
+        doc.getElementById("retRet").value = "10";
+        doc.getElementById("retStd").value = "0";
+        doc.getElementById("infl").value = "0";
+        doc.getElementById("nsims").value = "100";
+        doc.getElementById("togBrok").classList.remove("on");
+        doc.getElementById("togHsa").classList.remove("on");
+        doc.getElementById("togP1").classList.remove("on");
+        doc.getElementById("togP2").classList.remove("on");
+        doc.getElementById("togAR").classList.remove("on");
+        doc.getElementById("togReg").classList.remove("on");
+        win.selRB("distRG", 0);
+        win.selRB("sampRG", 0);
+        doc.getElementById("banner").style.display = "none";
+        win.doRun();
+      } finally {
+        win.lads = originalLads;
+        restoreTiming();
+        restoreCanvas();
+      }
+      assert(doc.getElementById("resContent").textContent.includes("Success Rate"), "Results content did not render after a valid run.");
+      assert(doc.getElementById("tlContent").textContent.includes("Full Retirement"), "Timeline content did not render after a valid run.");
+      assert(doc.querySelector('[data-tab="results"]').classList.contains("active"), "Results tab did not become active.");
+      assert(doc.getElementById("runBtn").disabled === false, "Run button was not restored.");
+    }
+  },
+  {
+    group: "Simulation flow",
+    name: "saveSelf creates an HTML blob and the expected download name",
+    run: async ({ win }) => {
+      let created = false;
+      let revoked = false;
+      let filename = "";
+      const originalCreate = win.URL.createObjectURL;
+      const originalRevoke = win.URL.revokeObjectURL;
+      const originalClick = win.HTMLAnchorElement.prototype.click;
+      try {
+        win.URL.createObjectURL = function(blob) {
+          created = blob.type === "text/html";
+          return "blob:test";
+        };
+        win.URL.revokeObjectURL = function(href) {
+          revoked = href === "blob:test";
+        };
+        win.HTMLAnchorElement.prototype.click = function() {
+          filename = this.download;
+        };
+        win.saveSelf();
+      } finally {
+        win.URL.createObjectURL = originalCreate;
+        win.URL.revokeObjectURL = originalRevoke;
+        win.HTMLAnchorElement.prototype.click = originalClick;
+      }
+      assert(created, "saveSelf did not create an HTML blob.");
+      assert(revoked, "saveSelf did not revoke the blob URL.");
+      assert(filename === "RetirementSimulator_v2.html", "Unexpected download filename: " + filename);
+    }
+  },
+  {
+    group: "Advanced model branches",
+    name: "Regime switching respects deterministic bull and bear regimes",
+    run: async ({ win }) => {
+      const originalLads = win.lads.slice();
+      try {
+        win.lads = [];
+        const bull = win.simulate(baseParams(win, {
+          contrib: 0,
+          retRet: 0,
+          retStd: 0,
+          nsims: 1,
+          regOn: true,
+          bullM: 20,
+          bullS: 0,
+          bearM: -20,
+          bearS: 0,
+          bullSt: 1,
+          bearSt: 1,
+          initB: 1
+        }));
+        const bear = win.simulate(baseParams(win, {
+          contrib: 0,
+          retRet: 0,
+          retStd: 0,
+          nsims: 1,
+          regOn: true,
+          bullM: 20,
+          bullS: 0,
+          bearM: -20,
+          bearS: 0,
+          bullSt: 1,
+          bearSt: 1,
+          initB: 0
+        }));
+        assert(approx(bull.med, 1200, 1e-9), "Bull-only regime path should end at 1200.");
+        assert(approx(bear.med, 800, 1e-9), "Bear-only regime path should end at 800.");
+      } finally {
+        win.lads = originalLads;
+      }
+    }
+  },
+  {
+    group: "Advanced model branches",
+    name: "AR(1) changes the path when identical shocks are applied",
+    run: async ({ win }) => {
+      const originalLads = win.lads.slice();
+      try {
+        win.lads = [];
+        const noAr = withPatchedFunction(win, "rNorm", () => 1, () => win.simulate(baseParams(win, {
+          retAge: 32,
+          contrib: 0,
+          retRet: 0,
+          retStd: 10,
+          nsims: 1,
+          arOn: false,
+          arPhi: 0
+        })));
+        const withAr = withPatchedFunction(win, "rNorm", () => 1, () => win.simulate(baseParams(win, {
+          retAge: 32,
+          contrib: 0,
+          retRet: 0,
+          retStd: 10,
+          nsims: 1,
+          arOn: true,
+          arPhi: 0.5
+        })));
+        assert(withAr.med > noAr.med, "Positive AR(1) should amplify the repeated positive shock path.");
+      } finally {
+        win.lads = originalLads;
+      }
+    }
+  },
+  {
+    group: "Advanced model branches",
+    name: "Student's t branch amplifies shocks relative to normal when the gamma draw is fixed",
+    run: async ({ win }) => {
+      const originalLads = win.lads.slice();
+      try {
+        win.lads = [];
+        const normal = withPatchedFunction(win, "rNorm", () => 1, () => win.simulate(baseParams(win, {
+          contrib: 0,
+          retRet: 0,
+          retStd: 10,
+          nsims: 1,
+          dist: "normal"
+        })));
+        const tDist = withPatchedFunction(win, "rNorm", () => 1, () => withPatchedFunction(win, "rGamma", () => 1, () => win.simulate(baseParams(win, {
+          contrib: 0,
+          retRet: 0,
+          retStd: 10,
+          nsims: 1,
+          dist: "t",
+          tDf: 4
+        }))));
+        assert(tDist.med > normal.med, "Student's t path should be more extreme than the normal path under the same fixed shock.");
+      } finally {
+        win.lads = originalLads;
+      }
+    }
+  },
+  {
+    group: "Advanced model branches",
+    name: "Quasi-random sampling does not call the pseudo-random normal generator",
+    run: async ({ win }) => {
+      const originalLads = win.lads.slice();
+      try {
+        win.lads = [];
+        withPatchedFunction(win, "rNorm", () => { throw new Error("Pseudo-random normal generator should not run in Halton mode."); }, () => {
+          const result = win.simulate(baseParams(win, {
+            contrib: 0,
+            retStd: 5,
+            nsims: 3,
+            samp: "quasi"
+          }));
+          assert(Array.isArray(result.comb) && result.comb.length === 3, "Quasi-random simulation did not complete.");
+        });
+      } finally {
+        win.lads = originalLads;
+      }
+    }
+  },
+  {
+    group: "Advanced model statistics",
+    name: "Student's t shock generation produces heavier tails than normal shocks",
+    run: async ({ win }) => {
+      const normal = [];
+      const tDist = [];
+      const sampleCount = 5000;
+      for (let index = 0; index < sampleCount; index += 1) {
+        normal.push(win.rNorm(0, 1));
+        tDist.push(win.rNorm(0, 1) / Math.sqrt(2 * win.rGamma(5 / 2) / 5));
+      }
+      const normalTailRate = normal.filter((value) => Math.abs(value) > 3).length / sampleCount;
+      const tTailRate = tDist.filter((value) => Math.abs(value) > 3).length / sampleCount;
+      const normalKurtosis = excessKurtosis(normal);
+      const tKurtosis = excessKurtosis(tDist);
+      assert(tTailRate > normalTailRate, "Tail event frequency did not increase under the t-distribution sample.");
+      assert(tKurtosis > normalKurtosis, "Excess kurtosis did not increase under the t-distribution sample.");
+    }
+  }
+];
+
+async function runAllTests() {
+  runButton.disabled = true;
+  setStatus("Running the saved regression suite...", "warn");
+  const start = performance.now();
+  const results = [];
+  for (const definition of tests) {
+    const result = await runTest(definition);
+    results.push(result);
+    renderResults(results);
+    updateSummary(results, null);
+  }
+  const duration = Math.round(performance.now() - start);
+  updateSummary(results, duration);
+  const failed = results.filter((result) => result.status === "failed");
+  if (failed.length) {
+    setStatus(failed.length + " test(s) failed. Review the detailed messages below.", "fail");
+  } else {
+    setStatus("All saved regression tests passed.", "pass");
+  }
+  runButton.disabled = false;
+}
+
+runButton.addEventListener("click", () => {
+  runAllTests().catch((error) => {
+    updateSummary([], null);
+    renderResults([{ name: "Harness startup", group: "Harness", status: "failed", message: error.message || String(error) }]);
+    setStatus("The harness could not complete startup. See the failure message below.", "fail");
+    runButton.disabled = false;
+  });
+});
+</script>
+</body>
+</html>
